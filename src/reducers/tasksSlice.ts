@@ -1,22 +1,22 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { ref, listAll, getDownloadURL } from 'firebase/storage';
-import { db } from '../firebase-config';
+
 import { tasksCollection } from '../common/databaseCollection';
-import { storage } from '../firebase-config';
+import { db, storage } from '../firebase-config';
 
 export type TaskType = {
-  id: string,
-  title: string,
-  status: boolean,
-  isFile: boolean,
-  fileUrl: string, 
-  date: string,
-  deadline: string,
+  id: string;
+  title: string;
+  status: boolean;
+  isFile: boolean;
+  fileUrl: string;
+  date: string;
+  deadline: string;
 };
 
 export type InitialStateType = {
-  tasks: TaskType[] 
+  tasks: TaskType[];
 };
 
 const initialState: InitialStateType = {
@@ -24,145 +24,148 @@ const initialState: InitialStateType = {
 };
 
 type SetDeadlineType = {
-  id: string,
-  deadline: string,
+  id: string;
+  deadline: string;
 };
 
-export const fetchTaskFileUrl = createAsyncThunk<void, string, {rejectValue: string}>(
+export const fetchTaskFileUrl = createAsyncThunk<void, string, { rejectValue: string }>(
   'tasks/fetchTaskFileUrl',
 
-  async function  (id, {dispatch})  {
+  async function (id, { dispatch }) {
     try {
       const fileRef = ref(storage, 'files');
+      const sliceInterval = 6;
 
-      listAll(fileRef).then((res) => {
-        res.items.forEach((item) => {
-          const fileId = item.fullPath.slice(6);
+      listAll(fileRef).then(res => {
+        res.items.forEach(item => {
+          const fileId = item.fullPath.slice(sliceInterval);
 
-          getDownloadURL(item).then((url) => {
+          getDownloadURL(item).then(url => {
             if (fileId === id) {
-              dispatch(fetchUpdateTaskUrl({id, url}));
+              dispatch(fetchUpdateTaskUrl({ id, url }));
             }
-
           });
         });
       });
-      
-    } catch (error: any) {
-      return error;
-    };
-  },
-);
-
-export const fetchUpdateTaskStatus = createAsyncThunk<null, {id: string, status: boolean}, {rejectValue: string}>(
-  'tasks/fetchUpdateTaskStatus',
-
-  async function  ({id, status}, {dispatch})  {
-    try {
-      const taskDoc = doc(db, 'tasks', id);
-
-      await updateDoc(taskDoc, { status: !status});
-      dispatch(fetchTasks());
-
     } catch (error: any) {
       return error;
     }
   },
 );
-export const fetchUpdateTaskUrl = createAsyncThunk<null, {id: string, url: string}, {rejectValue: string}>(
+
+export const fetchUpdateTaskStatus = createAsyncThunk<
+  null,
+  { id: string; status: boolean },
+  { rejectValue: string }
+>(
+  'tasks/fetchUpdateTaskStatus',
+
+  async function ({ id, status }, { dispatch }) {
+    try {
+      const taskDoc = doc(db, 'tasks', id);
+
+      await updateDoc(taskDoc, { status: !status });
+      dispatch(fetchTasks());
+    } catch (error: any) {
+      return error;
+    }
+  },
+);
+export const fetchUpdateTaskUrl = createAsyncThunk<
+  null,
+  { id: string; url: string },
+  { rejectValue: string }
+>(
   'tasks/fetchUpdateTaskUrl',
 
-  async function  ({id, url}, {dispatch})  {
+  async function ({ id, url }, { dispatch }) {
     try {
-
       const taskDoc = doc(db, 'tasks', id);
 
-      await updateDoc(taskDoc, {fileUrl: url});
+      await updateDoc(taskDoc, { fileUrl: url });
       dispatch(fetchTasks());
-
     } catch (error: any) {
       return error;
-    };
+    }
   },
 );
-export const fetchUpdateTaskTitle = createAsyncThunk<null, {id: string, title: string}, {rejectValue: string}>(
+export const fetchUpdateTaskTitle = createAsyncThunk<
+  null,
+  { id: string; title: string },
+  { rejectValue: string }
+>(
   'tasks/fetchUpdateTaskTitle',
-  
-  async function  ({id, title}, {dispatch})  {
-    try {
 
+  async function ({ id, title }, { dispatch }) {
+    try {
       const taskDoc = doc(db, 'tasks', id);
 
-      await updateDoc(taskDoc, { title: title });
+      await updateDoc(taskDoc, { title });
       dispatch(fetchTasks());
-
     } catch (error: any) {
       return error;
-    };
+    }
   },
 );
-export const fetchUpdateTaskDeadline = createAsyncThunk<null, {id: string, deadline: string}, {rejectValue: string}>(
+export const fetchUpdateTaskDeadline = createAsyncThunk<
+  null,
+  { id: string; deadline: string },
+  { rejectValue: string }
+>(
   'tasks/fetchUpdateTaskDeadline',
 
-  async function  ({id, deadline}, {dispatch})  {
+  async function ({ id, deadline }, { dispatch }) {
     try {
-
       const taskDoc = doc(db, 'tasks', id);
 
-      await updateDoc(taskDoc, {deadline: deadline});
+      await updateDoc(taskDoc, { deadline });
       dispatch(fetchTasks());
-
     } catch (error: any) {
       return error;
-    };
+    }
   },
 );
 
-export const fetchRemoveTask = createAsyncThunk<null, string, {rejectValue: string}>(
+export const fetchRemoveTask = createAsyncThunk<null, string, { rejectValue: string }>(
   'tasks/fetchRemoveTask',
-  
-  async function  (id, {dispatch})  {
-    try {
 
+  async function (id, { dispatch }) {
+    try {
       const taskDoc = doc(db, 'tasks', id);
 
       await deleteDoc(taskDoc);
       dispatch(fetchTasks());
-
     } catch (error: any) {
       return error;
-    };
+    }
   },
 );
 
-export const fetchAddTask = createAsyncThunk<null, TaskType,{rejectValue: string}>(
+export const fetchAddTask = createAsyncThunk<null, TaskType, { rejectValue: string }>(
   'tasks/fetchAddTask',
 
-  async function  (task, {dispatch})  {
+  async function (task, { dispatch }) {
     try {
-
       await addDoc(tasksCollection, task);
       dispatch(fetchTasks());
-
     } catch (error: any) {
       return error;
-    };
+    }
   },
 );
 
-export const fetchTasks = createAsyncThunk<TaskType[], void, {rejectValue: string}>(
+export const fetchTasks = createAsyncThunk<TaskType[], void, { rejectValue: string }>(
   'tasks/fetchTasks',
 
-  async function  ()  {
+  async function () {
     try {
-
       const data = await getDocs(tasksCollection);
-      const tasks = data.docs.map((doc) => ({...doc.data(), id: doc.id}));
-      return tasks;
+      const tasks = data.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
+      return tasks;
     } catch (error: any) {
       return error;
-    };
+    }
   },
 );
 
@@ -174,28 +177,36 @@ const tasksSlice = createSlice({
       state.tasks = [...state.tasks, action.payload];
     },
     removeTask(state, action: PayloadAction<string>) {
-      state.tasks = state.tasks.filter((task) => task.id !== action.payload);
+      state.tasks = state.tasks.filter(task => task.id !== action.payload);
     },
     changeStatus(state, action) {
-      state.tasks = state.tasks.map((task) => task.id === action.payload ? {...task, status: !task.status}: task);
+      state.tasks = state.tasks.map(task =>
+        task.id === action.payload ? { ...task, status: !task.status } : task,
+      );
     },
-    setTaskFileUrl(state, action: PayloadAction<{id: string, url: string}>) {
-      state.tasks = state.tasks?.map((task) => task.id === action.payload.id ? {...task, fileUrl: action.payload.url}: task);
+    setTaskFileUrl(state, action: PayloadAction<{ id: string; url: string }>) {
+      state.tasks = state.tasks?.map(task =>
+        task.id === action.payload.id ? { ...task, fileUrl: action.payload.url } : task,
+      );
     },
     setTaskDeadline(state, action: PayloadAction<SetDeadlineType>) {
-      state.tasks = state.tasks?.map((task) => task.id === action.payload.id ? {...task, deadline: action.payload.deadline}: task);
+      state.tasks = state.tasks?.map(task =>
+        task.id === action.payload.id
+          ? { ...task, deadline: action.payload.deadline }
+          : task,
+      );
     },
     setTaskFileStatus(state, action: PayloadAction<string>) {
-      state.tasks = state.tasks?.map((task) => task.id === action.payload ? {...task, isFile: true}: task);
+      state.tasks = state.tasks?.map(task =>
+        task.id === action.payload ? { ...task, isFile: true } : task,
+      );
     },
   },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchTasks.fulfilled, (state, action) => {
-        state.tasks = action.payload;
-      });
+  extraReducers: builder => {
+    builder.addCase(fetchTasks.fulfilled, (state, action) => {
+      state.tasks = action.payload;
+    });
   },
 });
 
-export const {addTask, removeTask, changeStatus, setTaskFileUrl, setTaskDeadline, setTaskFileStatus} = tasksSlice.actions;
 export default tasksSlice.reducer;

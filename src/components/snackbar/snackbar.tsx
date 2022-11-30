@@ -1,21 +1,19 @@
-import React, {FC} from 'react';
-import Snackbar from '@mui/material/Snackbar';
+import React, { FC } from 'react';
+
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
 
 type PropsType = {
-  hasAlready: boolean
-  setHasAlready: (hasAlready: boolean) => void
-}
+  hasAlready: boolean;
+  setHasAlready: (hasAlready: boolean) => void;
+};
 
-const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
-  props,
-  ref,
-) {
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export const  TaskSnackbar: FC<PropsType> = ({hasAlready, setHasAlready}) => {
-  const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+export const TaskSnackbar: FC<PropsType> = ({ hasAlready, setHasAlready }) => {
+  const handleClose = (event?: React.SyntheticEvent | Event, reason?: string): void => {
     if (reason === 'clickaway') {
       return;
     }
@@ -25,7 +23,7 @@ export const  TaskSnackbar: FC<PropsType> = ({hasAlready, setHasAlready}) => {
   return (
     <Snackbar open={hasAlready} autoHideDuration={3000} onClose={handleClose}>
       <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
-          This task already exists!
+        This task already exists!
       </Alert>
     </Snackbar>
   );
